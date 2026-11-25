@@ -1,0 +1,23 @@
+# Core (domain, temporal, routing) - needed for tests
+numpy>=1.26
+scipy>=1.11
+networkx>=3.2
+pytest>=8
+
+# Deep learning / perception
+torch>=2.2
+opencv-python>=4.9
+ultralytics>=8.3
+
+# Demo + API
+streamlit>=1.35
+folium>=0.16
+streamlit-folium>=0.20
+fastapi>=0.110
+uvicorn>=0.29
+
+# Optional: real road graph + data tooling
+# osmnx>=1.9
+# pandas>=2.0
+# kaggle
+# yt-dlp

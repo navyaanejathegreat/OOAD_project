@@ -1,0 +1,42 @@
+@startuml use_case
+left to right direction
+skinparam packageStyle rectangle
+actor Commuter
+actor "Delivery rider /\nFleet operator" as Fleet
+actor "Citizen reporter" as Citizen
+actor "Municipal operator" as Muni
+actor "System admin" as Admin
+actor "Camera network" as Cam <<system>>
+actor "Weather service" as Weather <<system>>
+Fleet --|> Commuter
+
+rectangle JalMarg {
+  usecase "UC-01 Set vehicle profile" as UC1
+  usecase "UC-02 Plan safe route" as UC2
+  usecase "UC-03 Get wait-or-detour advice" as UC3
+  usecase "UC-04 View live waterlogging map" as UC4
+  usecase "UC-05 Report waterlogging (photo)" as UC5
+  usecase "UC-06 Ingest camera stream" as UC6
+  usecase "UC-07 Estimate water depth" as UC7
+  usecase "UC-08 Forecast recession /\ntime-to-passable" as UC8
+  usecase "UC-09 Verify / moderate reports" as UC9
+  usecase "UC-10 Receive hotspot alerts" as UC10
+  usecase "UC-11 Manage cameras & thresholds" as UC11
+  usecase "UC-12 Override segment state" as UC12
+}
+Commuter --> UC1
+Commuter --> UC2
+Commuter --> UC4
+Citizen --> UC5
+Muni --> UC9
+Muni --> UC10
+Muni --> UC12
+Muni --> UC4
+Admin --> UC11
+UC6 <-- Cam
+UC8 <-- Weather
+UC2 ..> UC8 : <<include>>
+UC3 ..> UC2 : <<extend>>
+UC5 ..> UC7 : <<include>>
+UC6 ..> UC7 : <<include>>
+@enduml

@@ -1,0 +1,37 @@
+@startuml seq_report
+title UC-05 Report waterlogging (photo) and UC-09 Verify report
+actor "Citizen reporter" as C
+participant "API /reports" as API
+participant JalMargService as S
+participant FormatCheck as F
+participant DuplicateCheck as D
+participant QualityCheck as Q
+participant ConfidenceCheck as CC
+participant HumanModeration as H
+participant RoadSegment as Seg
+participant ObservationRepository as R
+actor "Municipal operator" as M
+
+C -> API : POST photo + depth
+API -> S : submitReport(report)
+S -> F : handle(report, ctx)
+F -> D : handle
+D -> Q : handle
+Q -> CC : handle
+CC -> H : handle
+alt rejected by any check
+  F --> S : REJECTED (reason)
+else ctx.needsReview
+  H --> S : PENDING (queued)
+  M -> S : moderateReport(id, approve)
+  S -> Seg : assimilate(report)
+else accepted
+  H --> S : ACCEPTED
+  S -> S : drop image pixels (privacy)
+  S -> Seg : assimilate(report)
+  Seg -> Seg : Kalman update, state transition, notify observers
+  S -> R : add(observation numbers only)
+end
+S --> API : verdict
+API --> C : thanks / reason
+@enduml

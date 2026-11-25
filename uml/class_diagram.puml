@@ -1,0 +1,141 @@
+@startuml class_diagram
+skinparam classAttributeIconSize 0
+hide empty members
+
+package domain {
+  class RoadSegment {
+    - segmentId: str
+    - state: SegmentState
+    - override: OperatorOverride
+    + assimilate(obs: Observation)
+    + tick(now, rain)
+    + forecast(now): Quantiles
+    + timeToPassable(v: VehicleProfile): TimeToPassable
+    + passableMinutes(v): bool[]
+    + attach(o: SegmentObserver)
+  }
+  interface SegmentState {
+    + onObservation(seg): SegmentState
+    + onTick(seg): SegmentState
+    + blocks(v): bool
+  }
+  SegmentState <|.. Dry
+  SegmentState <|.. Wet
+  SegmentState <|.. Rising
+  SegmentState <|.. Receding
+  SegmentState <|.. Unknown
+
+  abstract class VehicleProfile {
+    + safeDepthCm: float
+    + marginCm: float
+    + isPassable(h, sigma): bool
+  }
+  VehicleProfile <|-- Pedestrian
+  VehicleProfile <|-- TwoWheeler
+  VehicleProfile <|-- AutoRickshaw
+  VehicleProfile <|-- Car
+  VehicleProfile <|-- SUV
+  VehicleProfile <|-- Bus
+  class VehicleProfileFactory {
+    + create(key): VehicleProfile
+  }
+  VehicleProfileFactory ..> VehicleProfile : creates
+
+  abstract class Observation {
+    timestamp
+    depthCm
+    sigmaCm
+    reliability
+    + effectiveSigma()
+  }
+  Observation <|-- CameraObservation
+  Observation <|-- CitizenReport
+
+  interface SegmentObserver {
+    + onStateChange(seg, old, new)
+  }
+  SegmentObserver <|.. AlertService
+  SegmentObserver <|.. RouteCacheInvalidator
+  class OperatorOverride
+}
+
+package temporal {
+  class KalmanDepthTracker {
+    + update(t, h, sigma)
+    + predictAt(t)
+  }
+  interface RecessionForecaster {
+    + forecast(hist, rain, rainFuture): Quantiles
+  }
+  RecessionForecaster <|.. PhysicsForecaster
+  RecessionForecaster <|.. GRUForecaster
+  RecessionForecaster <|.. HybridForecaster
+  HybridForecaster o-- PhysicsForecaster
+}
+
+package perception {
+  interface DepthEstimator {
+    + estimate(frame): CameraObservation
+  }
+  DepthEstimator <|.. ReferenceObjectEstimator
+  DepthEstimator <|.. LearnedDepthEstimator
+  class EstimatorFactory
+  EstimatorFactory ..> DepthEstimator : creates
+  ReferenceObjectEstimator --> Segmenter
+}
+
+package adapters {
+  interface CameraSource {
+    + frames(): Iterator<Frame>
+  }
+  CameraSource <|.. RtspAdapter
+  CameraSource <|.. VideoFileAdapter
+  CameraSource <|.. PhotoAdapter
+}
+
+package validation {
+  abstract class ReportValidator {
+    + setNext(v)
+    + handle(report, ctx)
+  }
+  ReportValidator <|-- FormatCheck
+  ReportValidator <|-- DuplicateCheck
+  ReportValidator <|-- QualityCheck
+  ReportValidator <|-- ConfidenceCheck
+  ReportValidator <|-- HumanModeration
+  ReportValidator --> ReportValidator : next
+}
+
+package routing {
+  class RoutePlanner {
+    + plan(o, d, v, t0): Route
+    + waitOrDetour(o, d, v, t0): Advice
+  }
+  class RoadGraph
+  class Advice
+  RoutePlanner --> RoadGraph
+  RoutePlanner ..> Advice
+}
+
+package repositories {
+  interface SegmentRepository
+  interface ObservationRepository
+}
+
+class JalMargService <<Facade>>
+
+RoadSegment --> "1" SegmentState
+RoadSegment *-- KalmanDepthTracker
+RoadSegment --> RecessionForecaster
+RoadSegment --> "*" SegmentObserver
+RoadSegment --> "0..1" OperatorOverride
+RoadSegment ..> Observation
+RoadSegment ..> VehicleProfile
+RoutePlanner --> "*" RoadSegment
+JalMargService --> RoutePlanner
+JalMargService --> SegmentRepository
+JalMargService --> ObservationRepository
+JalMargService --> DepthEstimator
+JalMargService --> ReportValidator
+JalMargService --> VehicleProfileFactory
+@enduml

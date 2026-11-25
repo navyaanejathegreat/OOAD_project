@@ -1,0 +1,36 @@
+@startuml activity_report_validation
+title Citizen report validation (Chain of Responsibility)
+start
+:Citizen submits photo + depth;
+if (Format OK?\nknown segment, recent, depth 0-200 cm, photo) then (yes)
+else (no)
+  :Reject with reason;
+  stop
+endif
+if (Duplicate?\nsame photo hash, or same reporter + segment within 10 min) then (yes)
+  :Reject as duplicate;
+  stop
+else (no)
+endif
+if (Photo quality OK?\nbrightness, sharpness) then (yes)
+else (no)
+  :Reject: too dark or blurry;
+  stop
+endif
+:Compare with tracked depth\nand estimate uncertainty;
+if (Consistent and confident?) then (yes)
+  :Accept;
+  :Drop pixels, keep numbers;
+  :Kalman update on segment;
+else (no)
+  :Queue for human moderation;
+  :Municipal operator reviews;
+  if (Approved?) then (yes)
+    :Mark verified, raise reliability;
+    :Kalman update on segment;
+  else (no)
+    :Discard;
+  endif
+endif
+stop
+@enduml

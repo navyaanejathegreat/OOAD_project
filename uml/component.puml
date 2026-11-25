@@ -1,0 +1,45 @@
+@startuml component
+title Component diagram (layered architecture)
+package "Presentation" {
+  [Streamlit + Folium demo] as UI
+  [Municipal dashboard] as Dash
+}
+package "Application / API" {
+  [FastAPI /route /segments /reports /cameras] as API
+  [JalMargService (Facade)] as Facade
+}
+package "Domain" {
+  [RoadSegment + States] as Seg
+  [VehicleProfiles] as Veh
+  [RoutePlanner + TD Dijkstra] as Plan
+  [Report validation chain] as Chain
+  [Observers (alerts, cache)] as Obs
+}
+package "ML services" {
+  [Segmenter (YOLO11-seg)] as Segm
+  [DepthEstimators + fusion] as Depth
+  [Kalman tracker] as KF
+  [Recession forecaster\n(physics + GRU)] as Fc
+}
+package "Infrastructure" {
+  [SQLite repositories] as Repo
+  [Camera adapters\nRTSP / file / photo] as Cams
+  [Open-Meteo client] as Wx
+}
+UI --> Facade
+Dash --> API
+API --> Facade
+Facade --> Plan
+Facade --> Seg
+Facade --> Chain
+Facade --> Depth
+Facade --> Repo
+Facade --> Wx
+Facade --> Cams
+Seg --> KF
+Seg --> Fc
+Seg --> Obs
+Plan --> Seg
+Plan --> Veh
+Depth --> Segm
+@enduml

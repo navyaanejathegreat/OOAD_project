@@ -1,0 +1,25 @@
+@startuml state_segment
+title RoadSegment state machine (Impassable is a per-vehicle query, not a state)
+[*] --> Dry
+Dry --> Wet : rain > r0 or h > 1 cm
+Dry --> Rising : h > 5 cm
+Wet --> Rising : h > 5 cm
+Wet --> Dry : no rain and h < 1 cm for 30 min
+Rising --> Receding : dh/dt < 0 sustained
+Receding --> Rising : rain resumes / dh/dt > 0 sustained
+Receding --> Wet : h < 5 cm
+Dry --> Unknown : no observation > 20 min
+Wet --> Unknown : no observation > 20 min
+Rising --> Unknown : no observation > 20 min
+Receding --> Unknown : no observation > 20 min
+Unknown --> Wet : new obs, h < 5 cm
+Unknown --> Receding : new obs, falling
+Unknown --> Rising : new obs, otherwise
+note right of Unknown
+  Fail-safe: blocks vehicles with
+  safe depth < 30 cm
+end note
+note right of Rising
+  re-forecast every 2 min
+end note
+@enduml

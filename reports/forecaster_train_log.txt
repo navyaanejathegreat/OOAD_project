@@ -1,0 +1,59 @@
+2400 train events / 600 test events -> 7200 / 1800 windows
+physics fits for training set done in 50s
+  [gru] epoch 1/25 pinball=0.0937
+  [gru] epoch 2/25 pinball=0.0612
+  [gru] epoch 3/25 pinball=0.0577
+  [gru] epoch 4/25 pinball=0.0570
+  [gru] epoch 5/25 pinball=0.0565
+  [gru] epoch 6/25 pinball=0.0561
+  [gru] epoch 7/25 pinball=0.0555
+  [gru] epoch 8/25 pinball=0.0545
+  [gru] epoch 9/25 pinball=0.0543
+  [gru] epoch 10/25 pinball=0.0528
+  [gru] epoch 11/25 pinball=0.0510
+  [gru] epoch 12/25 pinball=0.0497
+  [gru] epoch 13/25 pinball=0.0480
+  [gru] epoch 14/25 pinball=0.0457
+  [gru] epoch 15/25 pinball=0.0452
+  [gru] epoch 16/25 pinball=0.0438
+  [gru] epoch 17/25 pinball=0.0440
+  [gru] epoch 18/25 pinball=0.0428
+  [gru] epoch 19/25 pinball=0.0413
+  [gru] epoch 20/25 pinball=0.0406
+  [gru] epoch 21/25 pinball=0.0400
+  [gru] epoch 22/25 pinball=0.0403
+  [gru] epoch 23/25 pinball=0.0404
+  [gru] epoch 24/25 pinball=0.0399
+  [gru] epoch 25/25 pinball=0.0393
+  [hybrid] epoch 1/25 pinball=0.0715
+  [hybrid] epoch 2/25 pinball=0.0513
+  [hybrid] epoch 3/25 pinball=0.0487
+  [hybrid] epoch 4/25 pinball=0.0467
+  [hybrid] epoch 5/25 pinball=0.0460
+  [hybrid] epoch 6/25 pinball=0.0454
+  [hybrid] epoch 7/25 pinball=0.0441
+  [hybrid] epoch 8/25 pinball=0.0426
+  [hybrid] epoch 9/25 pinball=0.0423
+  [hybrid] epoch 10/25 pinball=0.0413
+  [hybrid] epoch 11/25 pinball=0.0413
+  [hybrid] epoch 12/25 pinball=0.0407
+  [hybrid] epoch 13/25 pinball=0.0401
+  [hybrid] epoch 14/25 pinball=0.0399
+  [hybrid] epoch 15/25 pinball=0.0399
+  [hybrid] epoch 16/25 pinball=0.0395
+  [hybrid] epoch 17/25 pinball=0.0388
+  [hybrid] epoch 18/25 pinball=0.0384
+  [hybrid] epoch 19/25 pinball=0.0380
+  [hybrid] epoch 20/25 pinball=0.0380
+  [hybrid] epoch 21/25 pinball=0.0379
+  [hybrid] epoch 22/25 pinball=0.0375
+  [hybrid] epoch 23/25 pinball=0.0375
+  [hybrid] epoch 24/25 pinball=0.0376
+  [hybrid] epoch 25/25 pinball=0.0369
+
+model         mae_10min      mae_30min      mae_60min    coverage_80 ttp_unsafe_rate  ttp_decisions
+physics           1.093          2.193          3.339          0.845          0.015       1731.000
+gru               0.781          1.428          1.775          0.825          0.008       1748.000
+hybrid            0.714          1.359          1.730          0.812          0.003       1749.000
+
+saved models\forecaster_gru.pt, models\forecaster_hybrid.pt, reports/forecaster_results.json (207s)

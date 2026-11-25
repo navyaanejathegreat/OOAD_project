@@ -1,0 +1,33 @@
+@startuml deployment
+title Deployment (demo) and future production
+node "Student laptop" {
+  node "Python 3 runtime" {
+    artifact "streamlit_app.py" as st
+    artifact "jalmarg package" as pkg
+    artifact "uvicorn jalmarg.api" as api
+    artifact "models/*.pt" as models
+  }
+  database "SQLite file" as db
+  folder "data/clips (recorded video)" as clips
+}
+node "Google Colab GPU" {
+  artifact "training notebooks" as nb
+}
+cloud "Open-Meteo API" as om
+node "Browser" as br
+br --> st : HTTP 8501
+br --> api : HTTP 8000
+st --> pkg
+api --> pkg
+pkg --> db
+pkg --> clips
+pkg --> models
+pkg --> om : HTTPS
+nb ..> models : exports weights
+
+node "Future: city server" as fut {
+  database "PostgreSQL + PostGIS" as pg
+  database "Redis" as redis
+}
+note bottom of fut : out of scope for the 10-day build
+@enduml

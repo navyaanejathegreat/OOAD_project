@@ -1,0 +1,44 @@
+@startuml seq_plan_route
+title UC-02 Plan safe route (with UC-03 wait-or-detour)
+actor Commuter
+participant "Streamlit / API" as UI
+participant JalMargService as S
+participant VehicleProfileFactory as F
+participant RoutePlanner as P
+participant RoadSegment as Seg
+participant RecessionForecaster as RF
+participant "TD Dijkstra" as TD
+participant AlertService as A
+
+Commuter -> UI : Find route (origin, dest)
+UI -> S : planRoute(user, o, d, t0)
+S -> F : create(vehicleKey)
+F --> S : VehicleProfile v
+S -> P : waitOrDetour(o, d, v, t0)
+loop each water-affected segment
+  P -> Seg : passableMinutes(v, t0)
+  alt operator override active
+    Seg --> P : all open / all closed
+  else state blocks v (Unknown and low vehicle)
+    Seg --> P : all closed (fail-safe)
+  else
+    Seg -> RF : forecast(history, rain, rainForecast)
+    RF --> Seg : Quantiles q10 / q50 / q90
+    Seg --> P : q90(t) < d_v - m, per minute
+  end
+end
+P -> TD : earliestArrival(allowWait = false)
+TD --> P : go-now route
+P -> TD : earliestArrival(allowWait = true)
+TD --> P : wait-then-go route
+alt no route either way (E1)
+  P --> S : Advice(no_safe_route)
+else waiting saves time (A1)
+  P --> S : Advice(wait N min, then go)
+else
+  P --> S : Advice(go now / detour)
+end
+S -> A : subscribe(user, segments on route)
+S --> UI : Advice + disclaimer
+UI --> Commuter : route, ETA, risk, advice
+@enduml

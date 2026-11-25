@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.sqlite
+*.db
+
+# Datasets and clips are not redistributed
+data/**
+!data/**/.gitkeep
+
+# Large model weights (keep small forecaster weights if you want)
+models/*.pt
+!models/forecaster_*.pt
+runs/
+
+# Secrets
+kaggle.json
+.env
