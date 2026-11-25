@@ -1,0 +1,525 @@
+<title>JalMarg</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single reading column with a staff-gauge rail; the live forecast instrument opens the page */
+:root {
+  --bg: #f3f6f7;
+  --surface: #ffffff;
+  --ink: #12232b;
+  --muted: #546a73;
+  --line: #d3dde1;
+  --water: #1d6f8c;
+  --water-soft: #d6e8ef;
+  --amber: #c27a00;
+  --safe: #2f7d4f;
+  --stop: #b23a3a;
+  --figure-bg: #ffffff;
+  --display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d171c; --surface: #13222a; --ink: #e3edf0; --muted: #93a9b2;
+    --line: #26404b; --water: #5bb3d3; --water-soft: #183847; --amber: #f0a92c; --safe: #5cc488; --stop: #ec7676;
+    --figure-bg: #f4f7f8; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d171c; --surface: #13222a; --ink: #e3edf0; --muted: #93a9b2;
+  --line: #26404b; --water: #5bb3d3; --water-soft: #183847; --amber: #f0a92c; --safe: #5cc488; --stop: #ec7676;
+  --figure-bg: #f4f7f8; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1040px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 600; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--water); overflow-wrap: anywhere; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-size: 0.86em; }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.prose { max-width: 66ch; display: grid; gap: 0.9rem; color: var(--ink); }
+.prose .lead { font-size: 1.15rem; }
+.muted { color: var(--muted); }
+
+/* nav */
+nav.top { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; align-items: baseline; padding-block: 1.1rem; border-bottom: 1px solid var(--line); }
+nav.top .brand { font-family: var(--display); font-weight: 700; font-size: 1.15rem; margin-right: auto; }
+nav.top .brand span { color: var(--muted); font-weight: 500; font-size: 0.85rem; margin-left: 0.4rem; font-family: var(--body); }
+nav.top a { text-decoration: none; color: var(--muted); font-size: 0.95rem; }
+nav.top a:hover { color: var(--water); }
+
+/* hero */
+.hero { display: grid; gap: 1.5rem; padding-block: 2.5rem 2rem; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; max-width: 20ch; }
+.hero h1 em { font-style: normal; color: var(--water); }
+.hero .quote { font-size: 1.1rem; color: var(--muted); max-width: 62ch; border-left: 3px solid var(--amber); padding-left: 0.9rem; }
+
+/* instrument */
+.instrument { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.2rem; display: grid; gap: 1rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 1rem 1.6rem; align-items: end; }
+.vehicles { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.vehicles button {
+  font: 600 0.9rem var(--body); padding: 0.4rem 0.75rem; border-radius: 999px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); cursor: pointer;
+}
+.vehicles button[aria-pressed="true"] { background: var(--water); border-color: var(--water); color: var(--bg); }
+.vehicles button:hover { border-color: var(--water); }
+.slider { display: grid; gap: 0.2rem; min-width: 220px; }
+.slider label { font-size: 0.9rem; color: var(--muted); }
+.slider input { width: 100%; accent-color: var(--water); }
+.chart-box { overflow-x: auto; }
+.chart-box svg { width: 100%; min-width: 520px; height: auto; display: block; }
+.advice { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.8rem; }
+.advice .cell { border-top: 2px solid var(--line); padding-top: 0.5rem; display: grid; gap: 0.1rem; }
+.advice .cell b { font-family: var(--mono); font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.verdict { font-family: var(--display); font-size: 1.15rem; font-weight: 600; }
+.pill { display: inline-block; font: 600 0.75rem var(--mono); letter-spacing: 0.05em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 4px; }
+.pill.go { background: color-mix(in srgb, var(--safe) 18%, transparent); color: var(--safe); }
+.pill.wait { background: color-mix(in srgb, var(--amber) 20%, transparent); color: var(--amber); }
+.pill.detour { background: color-mix(in srgb, var(--stop) 16%, transparent); color: var(--stop); }
+.disclaimer { font-size: 0.85rem; color: var(--muted); }
+
+/* sections */
+section { padding-block: 3rem; border-top: 1px solid var(--line); display: grid; gap: 1.4rem; }
+.sec-head { display: grid; gap: 0.35rem; }
+
+/* pipeline: a real sequence, so it is numbered */
+ol.pipeline { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; counter-reset: step; }
+ol.pipeline li { counter-increment: step; padding: 0.9rem 0.9rem 0.9rem 0; border-top: 3px solid var(--water); display: grid; gap: 0.3rem; align-content: start; min-width: 0; }
+ol.pipeline li::before { content: counter(step); font: 600 0.8rem var(--mono); color: var(--water); }
+ol.pipeline li h3 { font-size: 1rem; }
+ol.pipeline li p { font-size: 0.93rem; color: var(--muted); }
+
+.formula { font-family: var(--mono); font-size: 0.9rem; background: var(--water-soft); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; white-space: pre; line-height: 1.7; }
+
+/* tables */
+.table-box { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 0.9rem; }
+tr.ours td { font-weight: 600; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.6rem; }
+.two > * { min-width: 0; }
+
+/* results bars */
+.bars svg { width: 100%; height: auto; display: block; }
+
+/* figures */
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+figure { margin: 0; display: grid; gap: 0.5rem; align-content: start; }
+figure .plate { background: var(--figure-bg); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem; }
+figure img { display: block; width: 100%; height: auto; max-height: 360px; object-fit: contain; }
+figcaption { font-size: 0.9rem; color: var(--muted); }
+figcaption b { color: var(--ink); font-family: var(--mono); font-weight: 600; margin-right: 0.35rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip { font-family: var(--mono); font-size: 0.8rem; border: 1px solid var(--line); border-radius: 4px; padding: 0.15rem 0.5rem; }
+
+pre.code { font-family: var(--mono); font-size: 0.85rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; margin: 0; }
+.mermaid-box { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; overflow-x: auto; }
+
+ul.status { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+ul.status li { display: grid; grid-template-columns: 6.5rem 1fr; gap: 0.8rem; align-items: baseline; }
+ul.status li > span:last-child { min-width: 0; }
+footer { padding-block: 2rem 3rem; border-top: 1px solid var(--line); font-size: 0.9rem; color: var(--muted); display: grid; gap: 0.4rem; }
+@media (max-width: 520px) { ul.status li { grid-template-columns: 1fr; gap: 0.1rem; } }
+@media (prefers-reduced-motion: no-preference) { .vehicles button { transition: background 0.15s, border-color 0.15s; } }
+</style>
+
+<div class="wrap">
+  <nav class="top" aria-label="Sections">
+    <div class="brand">JalMarg <span>जलमार्ग · “water path”</span></div>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#results">Results</a>
+    <a href="#design">OOAD</a>
+    <a href="#patent">Patent</a>
+    <a href="#code">Code</a>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">OOAD + Deep Learning project · UPES Dehradun</div>
+    <h1>Vehicle-aware routing around <em>waterlogged roads</em></h1>
+    <p class="quote">Google Maps tells you there’s traffic. It doesn’t tell you there’s 40 cm of water, or that the underpass will be safe for your scooter in 18 minutes.</p>
+
+    <div class="instrument" aria-label="Time-to-passable forecast for one flooded underpass">
+      <div class="controls">
+        <div style="display:grid;gap:0.35rem">
+          <span class="eyebrow">Your vehicle</span>
+          <div class="vehicles" id="vehicles" role="group" aria-label="Vehicle class"></div>
+        </div>
+        <div class="slider">
+          <label for="detour">Detour costs <b id="detourVal" class="mono">11</b> extra minutes</label>
+          <input id="detour" type="range" min="2" max="40" value="11">
+        </div>
+      </div>
+      <div class="chart-box"><svg id="chart" viewBox="0 0 760 330" role="img" aria-label="Water depth forecast with uncertainty band and the selected vehicle's safe depth"></svg></div>
+      <div class="advice" aria-live="polite">
+        <div class="cell"><span class="eyebrow">Depth now (median)</span><b id="nowDepth">–</b></div>
+        <div class="cell"><span class="eyebrow">Safe depth − margin</span><b id="thr">–</b></div>
+        <div class="cell"><span class="eyebrow">Time to passable</span><b id="ttp">–</b></div>
+        <div class="cell"><span class="eyebrow">Advice</span><span class="verdict" id="verdict">–</span></div>
+      </div>
+      <p class="disclaimer">Example underpass, illustrative curve built from the project’s physics model. Decisions use the 90th-percentile forecast plus a 2 cm margin. JalMarg is advisory only: use your own judgement and follow police and municipal instructions.</p>
+    </div>
+  </header>
+
+  <section id="problem">
+    <div class="sec-head"><span class="eyebrow">The problem</span><h2>Same water, a different answer for each vehicle</h2></div>
+    <div class="prose">
+      <p class="lead">Every monsoon, underpasses and low roads in Indian cities fill with water and then drain over the next half hour to several hours. Navigation apps don’t know how deep the water is, whether your vehicle can get through, or when it will clear.</p>
+      <p>25 cm of water is routine for a bus, risky for a hatchback and dangerous for a scooter. JalMarg treats passability as a property of the (road segment, vehicle class) pair, forecasts it ahead in time, and lets the router choose <i>when</i> to go as well as <i>where</i>: wait for the underpass to drain, or take the detour.</p>
+    </div>
+    <div class="table-box">
+      <table>
+        <thead><tr><th>Vehicle class</th><th class="num">Safe depth</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Pedestrian</td><td class="num">≈ 15 cm</td><td>Moving water this deep can knock an adult over</td></tr>
+          <tr><td>Two-wheeler</td><td class="num">≈ 20 cm</td><td>Low exhaust and air intake</td></tr>
+          <tr><td>Auto-rickshaw</td><td class="num">≈ 20 cm</td><td>Low floor, small wheels, rear engine</td></tr>
+          <tr><td>Hatchback / sedan</td><td class="num">≈ 25–30 cm</td><td>Air-intake height; about 30 cm can carry a car away</td></tr>
+          <tr><td>SUV</td><td class="num">≈ 45 cm</td><td>Higher ground clearance</td></tr>
+          <tr><td>Bus / truck</td><td class="num">≈ 50 cm</td><td>High intake and clearance</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:0.9rem">Indicative and configurable. Must be reviewed before any real-world use.</p>
+  </section>
+
+  <section id="pipeline">
+    <div class="sec-head"><span class="eyebrow">How it works</span><h2>From a video frame to “wait 18 min, or detour +11 min”</h2></div>
+    <ol class="pipeline">
+      <li><h3>Ingest</h3><p>Camera adapters read CCTV, video files or citizen photos and tag each frame with a road segment and time.</p></li>
+      <li><h3>Perceive</h3><p>YOLO11-seg segments the water and finds wheels, kerbs and people of known size.</p></li>
+      <li><h3>Measure</h3><p>Each reference object gives a depth with its own error; they are fused into one h ± σ.</p></li>
+      <li><h3>Track</h3><p>A Kalman filter per segment merges all sources, weighted by uncertainty and reliability.</p></li>
+      <li><h3>Forecast</h3><p>A physics prior corrected by a GRU predicts depth quantiles for the next hour or two.</p></li>
+      <li><h3>Decide</h3><p>Time-to-passable per vehicle feeds a time-dependent router that compares waiting with detouring.</p></li>
+    </ol>
+    <div class="two">
+      <div style="display:grid;gap:0.6rem">
+        <h3>Depth from reference objects</h3>
+        <div class="formula">h_r  = f_r · L_r
+σ_r² = (L_r·σ_f)² + (f_r·σ_L)²
+ĥ    = Σ(h_r/σ_r²) / Σ(1/σ_r²)
+σ_ĥ² = 1 / Σ(1/σ_r²)</div>
+        <p class="muted" style="font-size:0.93rem">f is the submerged fraction of an object of real height L, measured where the water mask cuts an ellipse fitted to the wheel.</p>
+      </div>
+      <div style="display:grid;gap:0.6rem">
+        <h3>Forecast and decision</h3>
+        <div class="formula">dh/dt = α·R(t) − k·(h − h∞)     physics prior
++ GRU residual, pinball loss τ ∈ {0.1, 0.5, 0.9}
+
+t*_v  = min{ t ≥ now : q₀.₉(h(t)) &lt; d_v − m }</div>
+        <p class="muted" style="font-size:0.93rem">R(t) is rainfall. Using the 90th percentile means JalMarg says “passable” only when it is confident.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="sec-head"><span class="eyebrow">Deep learning results</span><h2>The hybrid forecaster beats both baselines</h2></div>
+    <div class="prose"><p>Three forecasters trained on 3,000 synthetic rise-and-drain events (7,200 training and 1,800 test windows, split by event so no event appears in both). Lower error is better. The unsafe rate counts time-to-passable decisions that said “go” while the true depth was still above the vehicle’s limit.</p></div>
+    <div class="two">
+      <div class="bars" style="display:grid;gap:0.5rem">
+        <h3>Mean absolute error by forecast horizon</h3>
+        <svg id="bars" viewBox="0 0 460 280" role="img" aria-label="Grouped bar chart of mean absolute error in centimetres at 10, 30 and 60 minutes for the physics, GRU and hybrid forecasters"></svg>
+      </div>
+      <div class="table-box" style="align-self:start">
+        <table>
+          <thead><tr><th>Model</th><th class="num">MAE 10 min</th><th class="num">MAE 30 min</th><th class="num">MAE 60 min</th><th class="num">80% interval coverage</th><th class="num">Unsafe rate</th></tr></thead>
+          <tbody>
+            <tr><td>Physics only</td><td class="num">1.09 cm</td><td class="num">2.19 cm</td><td class="num">3.34 cm</td><td class="num">84.5%</td><td class="num">1.50%</td></tr>
+            <tr><td>GRU only</td><td class="num">0.78 cm</td><td class="num">1.43 cm</td><td class="num">1.78 cm</td><td class="num">82.5%</td><td class="num">0.80%</td></tr>
+            <tr class="ours"><td>Hybrid (ours)</td><td class="num">0.71 cm</td><td class="num">1.36 cm</td><td class="num">1.73 cm</td><td class="num">81.2%</td><td class="num">0.29%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="muted" style="font-size:0.9rem">Synthetic data only, 25 epochs on CPU. All three keep interval coverage inside the 70–90% target. Real tracked series and the YOLO perception metrics (mIoU, mAP) are still to come from Colab training.</p>
+  </section>
+
+  <section id="design">
+    <div class="sec-head"><span class="eyebrow">Object-oriented analysis and design</span><h2>Seven actors, twelve use cases, eight patterns</h2></div>
+    <div class="two">
+      <div style="display:grid;gap:0.7rem">
+        <h3>Road-segment state machine</h3>
+        <div class="mermaid-box">
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> Dry
+  Dry --> Wet: rain > r0
+  Wet --> Dry: dry for 30 min
+  Wet --> Rising: h > 5 cm
+  Rising --> Receding: dh/dt < 0 sustained
+  Receding --> Rising: rain resumes
+  Receding --> Wet: h < 5 cm
+  Rising --> Unknown: no data > 20 min
+  Receding --> Unknown: no data > 20 min
+  Unknown --> Wet: new observation
+</pre>
+        </div>
+        <p class="muted" style="font-size:0.93rem">Impassable is not a state. A segment is in one state at a time, but passability depends on the vehicle, so it is a query: <span class="mono">segment.time_to_passable(vehicle)</span>. Unknown is treated as impassable for vehicles whose safe depth is under 30 cm.</p>
+      </div>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Pattern</th><th>Where it is used</th></tr></thead>
+          <tbody>
+            <tr><td>Strategy</td><td><span class="mono">VehicleProfile</span>, <span class="mono">DepthEstimator</span></td></tr>
+            <tr><td>Observer</td><td><span class="mono">RoadSegment</span> → <span class="mono">AlertService</span>, <span class="mono">RouteCacheInvalidator</span></td></tr>
+            <tr><td>State</td><td><span class="mono">SegmentState</span>: Dry, Wet, Rising, Receding, Unknown</td></tr>
+            <tr><td>Adapter</td><td><span class="mono">CameraSource</span>: RTSP, video file, photo</td></tr>
+            <tr><td>Chain of Responsibility</td><td>Report checks: format → duplicate → quality → confidence → human moderation</td></tr>
+            <tr><td>Factory</td><td><span class="mono">VehicleProfileFactory</span>, <span class="mono">EstimatorFactory</span></td></tr>
+            <tr><td>Facade</td><td><span class="mono">JalMargService</span> behind the API and demo</td></tr>
+            <tr><td>Repository</td><td><span class="mono">SegmentRepository</span>, <span class="mono">ObservationRepository</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="two">
+      <div style="display:grid;gap:0.5rem">
+        <h3>Actors</h3>
+        <p class="muted">Commuter, delivery rider / fleet operator, citizen reporter, municipal operator and system admin, plus two external systems: the camera network and the weather service.</p>
+      </div>
+      <div style="display:grid;gap:0.5rem">
+        <h3>UML sources in <span class="mono">uml/</span></h3>
+        <div class="chips">
+          <span class="chip">use_case</span><span class="chip">class_diagram</span><span class="chip">seq_plan_route</span><span class="chip">seq_report</span>
+          <span class="chip">state_segment</span><span class="chip">activity_report_validation</span><span class="chip">component</span><span class="chip">deployment</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="patent">
+    <div class="sec-head"><span class="eyebrow">Invention disclosure</span><h2>What we ask the IPR cell to protect</h2></div>
+    <div class="table-box">
+      <table>
+        <thead><tr><th>Priority</th><th>Novel feature</th><th>How it differs from current systems</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Vehicle-class-specific time-to-passability</td><td>Earliest time the 90th-percentile forecast drops below each class’s safe depth, where others give one open/closed flag for the present moment.</td></tr>
+          <tr><td class="num">2</td><td>Wait-or-detour routing on vehicle-specific opening times</td><td>A time-dependent search may wait at a node for an edge to open; conventional routers only remove or penalise flooded edges.</td></tr>
+          <tr><td class="num">3</td><td>Physics-constrained neural recession forecaster</td><td>Metric depth quantiles from video-derived series, where CCTV methods give relative trends or coarse danger classes.</td></tr>
+          <tr><td class="num">4</td><td>Reliability-weighted multi-source state estimator with a fail-safe state</td><td>Weights cameras and citizen reports by σ and reliability; missing data means unsafe, never clear.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Drawings sheet</h3>
+    <div class="figs">
+      <figure><div class="plate"><img src="figures/fig1.png" alt="Fig. 1, block diagram from image input to route advice"></div><figcaption><b>Fig. 1</b>End-to-end pipeline</figcaption></figure>
+      <figure><div class="plate"><img src="figures/fig2.png" alt="Fig. 2, wheel with fitted ellipse, waterline and water depth h"></div><figcaption><b>Fig. 2</b>The wheel as a ruler</figcaption></figure>
+      <figure><div class="plate"><img src="figures/fig3.png" alt="Fig. 3, depth forecast with quantile band and three vehicle safe-depth lines"></div><figcaption><b>Fig. 3</b>Forecast band and time-to-passable per vehicle</figcaption></figure>
+      <figure><div class="plate"><img src="figures/fig4.png" alt="Fig. 4, road-segment state machine"></div><figcaption><b>Fig. 4</b>Road-segment states</figcaption></figure>
+      <figure><div class="plate"><img src="figures/fig5.png" alt="Fig. 5, wait-then-go route compared with a detour around a flooded segment"></div><figcaption><b>Fig. 5</b>Wait-then-go versus detour</figcaption></figure>
+    </div>
+    <p class="muted" style="font-size:0.9rem">Files: <span class="mono">JalMarg_Invention_Disclosure_Form.docx</span> and <span class="mono">JalMarg_Drawings_Sheet.pdf</span>. Inventor details, signatures and the prior-disclosure answer are still to be completed before submission to the UPES IPR cell.</p>
+  </section>
+
+  <section id="code">
+    <div class="sec-head"><span class="eyebrow">Code</span><h2>Pure-Python domain layer, tested first</h2></div>
+    <div class="two">
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Package</th><th>Contents</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">domain/</td><td>segment, states, vehicles, observation, observers</td></tr>
+            <tr><td class="mono">temporal/</td><td>Kalman tracker, synthetic series, forecasters, training</td></tr>
+            <tr><td class="mono">perception/</td><td>segmenter, wheel geometry, depth fusion, estimators</td></tr>
+            <tr><td class="mono">routing/</td><td>road graph, time-dependent Dijkstra, planner</td></tr>
+            <tr><td class="mono">validation/</td><td>citizen-report chain</td></tr>
+            <tr><td class="mono">adapters/</td><td>camera sources, Open-Meteo weather</td></tr>
+            <tr><td class="mono">repositories/</td><td>SQLite and in-memory storage</td></tr>
+            <tr><td class="mono">service.py · api.py</td><td>JalMargService facade, FastAPI routes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:grid;gap:0.8rem;align-content:start">
+        <div class="advice">
+          <div class="cell"><span class="eyebrow">Tests passing</span><b>73</b></div>
+          <div class="cell"><span class="eyebrow">Lines of Python</span><b>3,710</b></div>
+        </div>
+<pre class="code">pip install -r requirements.txt
+pytest tests/
+python -m jalmarg.temporal.train
+streamlit run app/streamlit_app.py</pre>
+        <p>Source: <a href="https://github.com/navyaanejathegreat/OOAD_project">github.com/navyaanejathegreat/OOAD_project</a></p>
+      </div>
+    </div>
+    <div style="display:grid;gap:0.6rem">
+      <h3>Where it stands</h3>
+      <ul class="status">
+        <li><span class="pill go">Done</span><span>Domain layer, Kalman tracker, three forecasters, routing, report validation, API, Streamlit demo, 8 UML diagrams, disclosure form and drawings</span></li>
+        <li><span class="pill wait">Next</span><span>Fine-tune YOLO11-seg on Colab and label about 150 wheel frames in Roboflow; measure mIoU and mAP</span></li>
+        <li><span class="pill wait">Next</span><span>SRS, two remaining use-case specifications, OOAD and DL reports, demo video</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>JalMarg</b> · OOAD + Deep Learning project · B.Tech CSE, UPES Dehradun</p>
+    <p>Advisory only. Fast currents, open manholes and road collapse cannot be seen in water depth.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const VEH = [
+    { key: "pedestrian", label: "Pedestrian", d: 15 },
+    { key: "two", label: "Two-wheeler", d: 20 },
+    { key: "auto", label: "Auto", d: 20 },
+    { key: "car", label: "Car", d: 28 },
+    { key: "suv", label: "SUV", d: 45 },
+    { key: "bus", label: "Bus", d: 50 },
+  ];
+  const MARGIN = 2, Z90 = 1.2816;
+  // illustrative underpass: peak 40 cm at t = -18 min, drains towards 2 cm
+  const hInf = 2, peak = 40, tPeak = -18, k = 0.03;
+  const q50 = (t) => t < tPeak ? Math.max(0, peak * (t + 42) / 24) : hInf + (peak - hInf) * Math.exp(-k * (t - tPeak));
+  const sig = (t) => Math.sqrt(1.5 * 1.5 + 0.15 * Math.max(0, t));
+  const q90 = (t) => q50(t) + Z90 * sig(t);
+  const q10 = (t) => Math.max(0, q50(t) - Z90 * sig(t));
+
+  let vehicle = VEH[1];
+  const vbox = document.getElementById("vehicles");
+  VEH.forEach((v) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.id = "veh-" + v.key; b.textContent = v.label;
+    b.setAttribute("aria-pressed", v === vehicle ? "true" : "false");
+    b.addEventListener("click", () => { vehicle = v; [...vbox.children].forEach((c) => c.setAttribute("aria-pressed", c === b ? "true" : "false")); draw(); });
+    vbox.appendChild(b);
+  });
+  const detour = document.getElementById("detour");
+  detour.addEventListener("input", draw);
+
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (n, a, txt) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  function ttp(v) {
+    const thr = v.d - MARGIN;
+    for (let t = 0; t <= 90; t++) if (q90(t) < thr) return t;
+    return null;
+  }
+
+  function draw() {
+    const svg = document.getElementById("chart");
+    svg.replaceChildren();
+    const W = 760, H = 330, L = 64, R = 24, T = 18, B = 44;
+    const t0 = -36, t1 = 90, hMax = 45;
+    const x = (t) => L + (t - t0) / (t1 - t0) * (W - L - R);
+    const y = (h) => T + (1 - h / hMax) * (H - T - B);
+    const ink = css("--ink"), muted = css("--muted"), line = css("--line"), water = css("--water"),
+      soft = css("--water-soft"), amber = css("--amber"), safe = css("--safe");
+
+    // staff-gauge axis: ticks every 5 cm, labels every 10
+    for (let h = 0; h <= hMax; h += 5) {
+      svg.appendChild(el("line", { x1: L, x2: W - R, y1: y(h), y2: y(h), stroke: line, "stroke-width": h % 10 ? 0.5 : 1 }));
+      svg.appendChild(el("line", { x1: L - (h % 10 ? 5 : 10), x2: L, y1: y(h), y2: y(h), stroke: muted, "stroke-width": 1.2 }));
+      if (h % 10 === 0) svg.appendChild(el("text", { x: L - 14, y: y(h) + 4, "text-anchor": "end", fill: muted, "font-size": 12, "font-family": "JetBrains Mono, monospace" }, h + " cm"));
+    }
+    for (let t = -30; t <= 90; t += 15) {
+      svg.appendChild(el("text", { x: x(t), y: H - B + 20, "text-anchor": "middle", fill: muted, "font-size": 12, "font-family": "JetBrains Mono, monospace" }, t === 0 ? "now" : (t > 0 ? "+" : "") + t + " min"));
+    }
+    // band
+    let pts = [];
+    for (let t = 0; t <= t1; t++) pts.push(x(t) + "," + y(q90(t)));
+    for (let t = t1; t >= 0; t--) pts.push(x(t) + "," + y(q10(t)));
+    svg.appendChild(el("polygon", { points: pts.join(" "), fill: soft, stroke: "none" }));
+    // q90 dashed
+    let d = ""; for (let t = 0; t <= t1; t++) d += (t ? "L" : "M") + x(t) + " " + y(q90(t));
+    svg.appendChild(el("path", { d, fill: "none", stroke: water, "stroke-width": 1.4, "stroke-dasharray": "5 4" }));
+    // median past + future
+    d = ""; for (let t = t0; t <= t1; t++) d += (t === t0 ? "M" : "L") + x(t) + " " + y(q50(t));
+    svg.appendChild(el("path", { d, fill: "none", stroke: water, "stroke-width": 2.6 }));
+    // observations (deterministic jitter)
+    for (let t = -33; t <= 0; t += 3) {
+      const j = Math.sin(t * 12.9898) * 1.2;
+      svg.appendChild(el("circle", { cx: x(t), cy: y(Math.max(0, q50(t) + j)), r: 3.6, fill: css("--surface"), stroke: ink, "stroke-width": 1.3 }));
+    }
+    // now line
+    svg.appendChild(el("line", { x1: x(0), x2: x(0), y1: T, y2: H - B, stroke: muted, "stroke-dasharray": "2 3" }));
+    // vehicle threshold
+    const thr = vehicle.d - MARGIN;
+    svg.appendChild(el("line", { x1: L, x2: W - R, y1: y(thr), y2: y(thr), stroke: amber, "stroke-width": 2 }));
+    svg.appendChild(el("text", { x: W - R - 4, y: y(thr) - 7, "text-anchor": "end", fill: amber, "font-size": 13, "font-weight": 600, "font-family": "Source Sans 3, sans-serif" }, vehicle.label + " limit " + thr + " cm"));
+    const t = ttp(vehicle);
+    if (t !== null && t > 0) {
+      svg.appendChild(el("line", { x1: x(t), x2: x(t), y1: y(thr), y2: H - B, stroke: amber, "stroke-dasharray": "3 3" }));
+      svg.appendChild(el("circle", { cx: x(t), cy: y(thr), r: 5.5, fill: amber }));
+      svg.appendChild(el("text", { x: x(t) + 8, y: H - B - 8, fill: amber, "font-size": 13, "font-weight": 600, "font-family": "JetBrains Mono, monospace" }, "t* = " + t + " min"));
+    }
+    // legend
+    const lg = [["Observed depth", "dot"], ["Median forecast", "solid"], ["90th percentile", "dash"]];
+    lg.forEach(([name, kind], i) => {
+      const lx = L + 14 + i * 150, ly = T + 10;
+      if (kind === "dot") svg.appendChild(el("circle", { cx: lx + 8, cy: ly, r: 3.6, fill: css("--surface"), stroke: ink, "stroke-width": 1.3 }));
+      else svg.appendChild(el("line", { x1: lx, x2: lx + 18, y1: ly, y2: ly, stroke: water, "stroke-width": kind === "solid" ? 2.6 : 1.4, "stroke-dasharray": kind === "dash" ? "5 4" : "none" }));
+      svg.appendChild(el("text", { x: lx + 24, y: ly + 4, fill: muted, "font-size": 12, "font-family": "Source Sans 3, sans-serif" }, name));
+    });
+
+    // readouts
+    const det = +detour.value;
+    document.getElementById("detourVal").textContent = det;
+    document.getElementById("nowDepth").textContent = q50(0).toFixed(0) + " cm";
+    document.getElementById("thr").textContent = thr + " cm";
+    const v = document.getElementById("verdict");
+    if (t === 0) {
+      document.getElementById("ttp").textContent = "now";
+      v.innerHTML = '<span class="pill go">Go</span> Likely passable now (estimate)';
+    } else if (t === null) {
+      document.getElementById("ttp").textContent = "> 90 min";
+      v.innerHTML = '<span class="pill detour">Detour</span> Not passable within the forecast; take the +' + det + ' min detour';
+    } else {
+      document.getElementById("ttp").textContent = "~" + t + " min";
+      v.innerHTML = t <= det
+        ? '<span class="pill wait">Wait</span> Wait about ' + t + ' min, then go (saves ' + (det - t) + ' min)'
+        : '<span class="pill detour">Detour</span> Take the detour (+' + det + ' min); waiting takes ~' + t + ' min';
+    }
+  }
+
+  function drawBars() {
+    const svg = document.getElementById("bars");
+    svg.replaceChildren();
+    const data = { "10 min": [1.093, 0.781, 0.714], "30 min": [2.193, 1.428, 1.359], "60 min": [3.339, 1.775, 1.730] };
+    const names = ["Physics", "GRU", "Hybrid"];
+    const W = 460, H = 280, L = 44, R = 10, T = 30, B = 34, max = 3.5;
+    const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+    const fills = [css("--line"), css("--muted"), css("--water")];
+    const y = (v) => T + (1 - v / max) * (H - T - B);
+    for (let v = 0; v <= 3; v += 1) {
+      svg.appendChild(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: line }));
+      svg.appendChild(el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end", fill: muted, "font-size": 12, "font-family": "JetBrains Mono, monospace" }, v + " cm"));
+    }
+    const groups = Object.keys(data), gw = (W - L - R) / groups.length, bw = 28;
+    groups.forEach((g, gi) => {
+      data[g].forEach((v, i) => {
+        const bx = L + gi * gw + gw / 2 + (i - 1) * (bw + 6) - bw / 2;
+        svg.appendChild(el("rect", { x: bx, y: y(v), width: bw, height: y(0) - y(v), fill: fills[i], rx: 2 }));
+        svg.appendChild(el("text", { x: bx + bw / 2, y: y(v) - 5, "text-anchor": "middle", fill: i === 2 ? ink : muted, "font-size": 11, "font-weight": i === 2 ? 600 : 400, "font-family": "JetBrains Mono, monospace" }, v.toFixed(2)));
+      });
+      svg.appendChild(el("text", { x: L + gi * gw + gw / 2, y: H - B + 20, "text-anchor": "middle", fill: muted, "font-size": 12, "font-family": "JetBrains Mono, monospace" }, g));
+    });
+    names.forEach((n, i) => {
+      const lx = L + 8 + i * 100;
+      svg.appendChild(el("rect", { x: lx, y: 6, width: 12, height: 12, fill: fills[i], rx: 2 }));
+      svg.appendChild(el("text", { x: lx + 18, y: 16, fill: muted, "font-size": 12, "font-family": "Source Sans 3, sans-serif" }, n));
+    });
+  }
+
+  draw(); drawBars();
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const redraw = () => { draw(); drawBars(); };
+  if (mq.addEventListener) mq.addEventListener("change", redraw);
+  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>

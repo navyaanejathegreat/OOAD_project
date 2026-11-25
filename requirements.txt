@@ -16,6 +16,7 @@ streamlit-folium>=0.20
 fastapi>=0.110
 uvicorn>=0.29
 
+# Optional: Streamlit demo (the React app in web/ is the main UI)
 # Optional: real road graph + data tooling
 # osmnx>=1.9
 # pandas>=2.0

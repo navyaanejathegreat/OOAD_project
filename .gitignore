@@ -17,3 +17,6 @@ runs/
 # Secrets
 kaggle.json
 .env
+
+node_modules/
+web/dist/
